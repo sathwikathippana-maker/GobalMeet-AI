@@ -1,0 +1,175 @@
+/* General styles */
+body {
+    background-color: #f0f2f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* User info and controls */
+#user-name {
+    font-size: 1.2em;
+    color: #1a73e8;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* Button styles */
+.btn {
+    padding: 8px 16px;
+    margin: 0 5px;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #5f6368;
+    color: white;
+}
+
+.btn-info {
+    background-color: #00acc1;
+    color: white;
+}
+
+.btn-success {
+    background-color: #0d904f;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Language selector */
+#language-select {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid #dadce0;
+    background-color: white;
+    font-size: 14px;
+    color: #3c4043;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+#language-select:hover {
+    border-color: #1a73e8;
+}
+
+/* Video container styles */
+#videos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2em;
+    margin-top: 20px;
+}
+
+#video-wrapper, #remote-video-container {
+    position: relative;
+    background-color: #202124;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.video-player {
+    background-color: #202124;
+    width: 100%;
+    border-radius: 12px;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+}
+
+/* Waiting indicator */
+#waiting {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* Subtitle styles */
+.subtitles {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    max-height: 120px;
+    overflow-y: auto;
+    display: none;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+    line-height: 1.4;
+}
+
+.subtitles.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #videos {
+        grid-template-columns: 1fr;
+        gap: 1em;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+
+    #language-select {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}
