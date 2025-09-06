@@ -8,6 +8,9 @@ class SubtitleManager {
     this.translationEnabled = false;
     this.manuallyStoppedRecognition = false;
     this.restartTimeout = null; // For debouncing restarts
+    this.audioContext = null;
+    this.mediaStreamSource = null;
+    this.remoteStream = null;
     this.targetLanguage = 'es'; // Default target language (Spanish)
     this.localSubtitleEl = document.querySelector("#local-subtitles");
     this.remoteSubtitleEl = document.querySelector("#remote-subtitles");
@@ -268,8 +271,9 @@ class SubtitleManager {
       this.toggleButton.textContent = "Stop Subtitles";
       this.toggleButton.classList.remove("btn-secondary");
       this.toggleButton.classList.add("btn-success");
-      this.localSubtitleEl.classList.add("active");
-      this.remoteSubtitleEl.classList.add("active");
+      // Make sure subtitle containers are visible
+      this.localSubtitleEl.style.display = "block";
+      this.remoteSubtitleEl.style.display = "block";
       console.log("✅ Subtitles enabled successfully");
     } else {
       console.log("❌ Disabling subtitles...");
@@ -277,8 +281,9 @@ class SubtitleManager {
       this.toggleButton.textContent = "Subtitles";
       this.toggleButton.classList.remove("btn-success");
       this.toggleButton.classList.add("btn-secondary");
-      this.localSubtitleEl.classList.remove("active");
-      this.remoteSubtitleEl.classList.remove("active");
+      // Hide subtitle containers
+      this.localSubtitleEl.style.display = "none";
+      this.remoteSubtitleEl.style.display = "none";
       this.clearSubtitles();
       console.log("❌ Subtitles disabled successfully");
     }
@@ -289,6 +294,12 @@ class SubtitleManager {
       try {
         console.log("🎬 Attempting to start speech recognition...");
         this.manuallyStoppedRecognition = false;
+        
+        // If we have a remote stream, make sure we're using it
+        if (this.remoteStream && this.mediaStreamSource) {
+          this.recognition.mediaStream = this.audioContext.createMediaStreamDestination().stream;
+        }
+        
         this.recognition.start();
         this.isListening = true;
         console.log("✅ Speech recognition start command sent");
@@ -323,6 +334,11 @@ class SubtitleManager {
       this.recognition.stop();
       this.isListening = false;
       console.log("✅ Speech recognition stop command sent");
+
+      // Clean up audio context if it exists
+      if (this.mediaStreamSource) {
+        this.mediaStreamSource.disconnect();
+      }
     } else if (!this.isListening) {
       console.log("ℹ️ Speech recognition already stopped");
     } else {
@@ -331,6 +347,7 @@ class SubtitleManager {
   }
 
   async displayLocalSubtitle(text) {
+    // For local subtitles, we'll just display them briefly to show that speech is being detected
     console.log("📺 Displaying local subtitle:", {
       text: text,
       length: text.length,
@@ -338,32 +355,27 @@ class SubtitleManager {
     });
 
     if (this.localSubtitleEl) {
-      if (this.translationEnabled) {
-        const translatedText = await this.translateText(text);
-        this.localSubtitleEl.textContent = translatedText;
-      } else {
-        this.localSubtitleEl.textContent = text;
-      }
+      this.localSubtitleEl.textContent = "Speaking...";
       this.autoHideSubtitle(this.localSubtitleEl);
     }
   }
 
   async displayRemoteSubtitle(text, userName) {
-    let displayText = `${userName}: ${text}`;
+    // For remote subtitles, we'll show the actual transcribed text
     console.log("📺 Displaying remote subtitle:", {
       userName: userName,
       text: text,
-      displayText: displayText,
-      length: displayText.length,
+      length: text.length,
       element: this.remoteSubtitleEl ? "found" : "not found",
     });
 
     if (this.remoteSubtitleEl) {
       if (this.translationEnabled) {
         const translatedText = await this.translateText(text);
-        displayText = `${userName}: ${translatedText}`;
+        this.remoteSubtitleEl.textContent = translatedText;
+      } else {
+        this.remoteSubtitleEl.textContent = text;
       }
-      this.remoteSubtitleEl.textContent = displayText;
       this.autoHideSubtitle(this.remoteSubtitleEl);
     }
   }
@@ -377,11 +389,20 @@ class SubtitleManager {
       console.log("🗑️ Cleared existing hide timeout");
     }
 
+    // Make sure the subtitle is visible if it has content
+    if (element.textContent.trim() !== "") {
+      element.style.display = "block";
+    }
+
     // Set new timeout to hide subtitle after 3 seconds
     element.hideTimeout = setTimeout(() => {
       if (element.textContent.trim() !== "") {
         console.log("🫥 Auto-hiding subtitle:", element.textContent);
         element.textContent = "";
+        // Only hide if subtitles are disabled
+        if (!this.subtitlesEnabled) {
+          element.style.display = "none";
+        }
       }
     }, 3000);
   }
@@ -438,10 +459,48 @@ class SubtitleManager {
       console.log("⚠️ Subtitles disabled, not displaying remote subtitle");
     }
   }
+
+  // Method to setup remote audio stream for speech recognition
+  setupRemoteAudioRecognition(stream) {
+    // Store the remote stream
+    this.remoteStream = stream;
+
+    // If we already have a recognition session running, stop it
+    if (this.recognition && this.isListening) {
+      this.stopListening();
+    }
+
+    // Initialize audio context if needed
+    if (!this.audioContext) {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Create a source node from the remote stream
+    this.mediaStreamSource = this.audioContext.createMediaStreamSource(stream);
+
+    // Create a MediaStreamDestination to get a MediaStream we can use with speech recognition
+    const destination = this.audioContext.createMediaStreamDestination();
+    this.mediaStreamSource.connect(destination);
+
+    // Configure recognition to use the remote audio
+    if (this.recognition) {
+      this.recognition.continuous = true;
+      this.recognition.interimResults = true;
+      this.recognition.lang = "en-US";
+      
+      // Override the default audio source
+      this.recognition.mediaStream = destination.stream;
+
+      // Start recognition if subtitles are enabled
+      if (this.subtitlesEnabled && !this.isListening) {
+        this.startListening();
+      }
+    }
+  }
 }
 
 // Initialize subtitle manager when the page loads
-let subtitleManager;
 document.addEventListener("DOMContentLoaded", () => {
-  subtitleManager = new SubtitleManager();
+  // Make it globally accessible
+  window.subtitleManager = new SubtitleManager();
 });

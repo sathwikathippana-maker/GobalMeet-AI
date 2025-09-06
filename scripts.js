@@ -128,6 +128,11 @@ const createPeerConnection = (offerObj) => {
       e.streams[0].getTracks().forEach((track) => {
         remoteStream.addTrack(track, remoteStream);
         console.log("Here's an exciting moment... fingers cross");
+        
+        // If this is an audio track, set it up for speech recognition
+        if (track.kind === 'audio' && window.subtitleManager) {
+          window.subtitleManager.setupRemoteAudioRecognition(e.streams[0]);
+        }
       });
     });
 

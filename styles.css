@@ -122,26 +122,24 @@ body {
 /* Subtitle styles */
 .subtitles {
     position: absolute;
-    bottom: 20px;
+    bottom: 60px; /* Moved up to avoid overlap with video controls */
     left: 20px;
     right: 20px;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.7);
     color: white;
     padding: 12px;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 18px;
     text-align: center;
     max-height: 120px;
     overflow-y: auto;
-    display: none;
+    display: none; /* Initially hidden */
     backdrop-filter: blur(4px);
     transition: all 0.3s ease;
     line-height: 1.4;
-}
-
-.subtitles.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
+    z-index: 1000;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    font-weight: 500;
 }
 
 /* Animations */
